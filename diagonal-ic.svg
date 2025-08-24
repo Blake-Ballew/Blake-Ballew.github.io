@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="512" height="512" role="img" aria-label="Diagonal microchip icon">
+  <title>Diagonal IC Icon (4 pins/side, flat colors)</title>
+  <!-- Entire icon is built as a vector, transparent background -->
+  <g transform="translate(128 128) rotate(45)">
+    <!-- Pins: 4 per side, uniform size and spacing -->
+    <!-- Right side -->
+    <rect x="60" y="-41" width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="60" y="-17" width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="60" y="7"  width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="60" y="31" width="22" height="10" fill="#DDDDDD" rx="2"/>
+
+    <!-- Left side -->
+    <rect x="-82" y="-41" width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="-82" y="-17" width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="-82" y="7"  width="22" height="10" fill="#DDDDDD" rx="2"/>
+    <rect x="-82" y="31" width="22" height="10" fill="#DDDDDD" rx="2"/>
+
+    <!-- Top side -->
+    <rect x="-41" y="-82" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="-17" y="-82" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="7"   y="-82" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="31"  y="-82" width="10" height="22" fill="#DDDDDD" rx="2"/>
+
+    <!-- Bottom side -->
+    <rect x="-41" y="60" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="-17" y="60" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="7"   y="60" width="10" height="22" fill="#DDDDDD" rx="2"/>
+    <rect x="31"  y="60" width="10" height="22" fill="#DDDDDD" rx="2"/>
+
+    <!-- Chip body -->
+    <rect x="-60" y="-60" width="120" height="120" fill="#1E64F0" rx="12"/>
+  </g>
+</svg>
