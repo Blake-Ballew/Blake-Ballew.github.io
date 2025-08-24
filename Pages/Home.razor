@@ -1,0 +1,132 @@
+﻿@page "/"
+
+<PageTitle>Archive</PageTitle>
+
+<div style="color: #0099FF; font-family: 'Courier New', monospace;">
+    <div class="terminal-prompt" style="margin-bottom: 20px;">whoami</div>
+    <div style="margin-left: 20px; margin-bottom: 20px;">blake</div>
+    
+    <div class="terminal-prompt" style="margin-bottom: 20px;">cat welcome.txt</div>
+    <div style="margin-left: 20px; margin-bottom: 30px;">
+        Welcome to my Archive<br/>
+        =====================<br/><br/>
+        
+        A back-end and firmware developer's showcase<br/>
+        Navigate using the terminal commands on the left<br/><br/>
+        
+        Type 'help' for available commands...
+    </div>
+    
+    <div class="terminal-prompt" style="margin-bottom: 20px;">cat about.txt</div>
+    <div class="terminal-window" style="margin: 10px 0 30px 20px;">
+        <div class="terminal-header">
+            <span style="color: #0099FF; font-family: 'Courier New', monospace;">
+                About Blake - Developer Profile
+            </span>
+        </div>
+        <div style="padding: 20px;">
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #0099FF; margin: 0 0 10px 0;">$ echo $ROLE</h3>
+                <p style="color: #0099FF; margin: 0 0 15px 20px;">
+                    Backend Developer & Embedded Systems Enthusiast
+                </p>
+                
+                <h3 style="color: #0099FF; margin: 20px 0 10px 0;">$ cat experience.log</h3>
+                <div style="margin-left: 20px; color: #0099FF;">
+                    <p style="margin: 0 0 10px 0;">
+                        • <strong>5+ years</strong> modernizing and maintaining legacy NET Framework applications in manufacturing environments
+                    </p>
+                    <p style="margin: 0 0 10px 0;">
+                        • <strong>7+ years</strong> working with embedded systems and firmware development (personal projects)
+                    </p>
+                    <p style="margin: 0 0 10px 0;">
+                        • <strong>Passionate about</strong> performance optimization, hardware integration, and exploring diverse areas of computing
+                    </p>
+                    <p style="margin: 0 0 10px 0;">
+                        • <strong>Hardware experience</strong> includes PCB design, circuit analysis, and prototyping
+                    </p>
+                </div>
+                
+                <h3 style="color: #0099FF; margin: 20px 0 10px 0;">$ grep -i "specialization" skills.txt</h3>
+                <div style="margin-left: 20px; color: #0099FF;">
+                    <p style="margin: 0 0 8px 0;">
+                        <span class="skill-tag">REST APIs</span>
+                        <span class="skill-tag">Microservices</span>
+                        <span class="skill-tag">Database Design</span>
+                    </p>
+                    <p style="margin: 0 0 8px 0;">
+                        <span class="skill-tag">ESP32</span>
+                        <span class="skill-tag">FreeRTOS</span>
+                        <span class="skill-tag">Low-level C/C++</span>
+                    </p>
+                    <p style="margin: 0 0 8px 0;">
+                        <span class="skill-tag">Docker</span>
+                        <span class="skill-tag">SQL Server</span>
+                        <span class="skill-tag">Circuit Design</span>
+                    </p>
+                </div>
+                
+                <h3 style="color: #0099FF; margin: 20px 0 10px 0;">$ tail current_focus.log</h3>
+                <div style="margin-left: 20px; color: #0077CC; font-style: italic;">
+                    <p style="margin: 0 0 8px 0;">
+                        Currently focused on a variety of lighting-based embedded projects.<br/>
+                        I am also currently brushing up on my Reverse Engineering and Cybersecurity skills.
+                    </p>
+                    <p style="margin: 0;">
+                        Always excited to tackle challenges in both software and hardware domains.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    @* <div class="terminal-prompt" style="margin-bottom: 20px;">ls -la ~/quick_stats</div>
+    <div style="margin-left: 20px; margin-bottom: 20px; color: #0077CC;">
+        Projects completed: 15+<br/>
+        Coffee consumed: ∞<br/>
+        Bugs fixed: 2,847<br/>
+        Hardware prototypes: 12<br/>
+        Lines of code: 100k+<br/>
+        Status: Ready for new challenges
+    </div> *@
+    
+    <div class="terminal-prompt" style="margin-bottom: 20px;">cat tech_stack.txt</div>
+    <div style="margin-left: 20px; margin-bottom: 20px; color: #0077CC;">
+        Framework: Blazor WebAssembly<br/>
+        Runtime: .NET 9<br/>
+        Language: C#<br/>
+        UI Library: MudBlazor<br/>
+        Markdown: Markdig<br/>
+        Contact Form: EmailJS
+    </div>
+    
+    <div class="terminal-prompt blinking-cursor"></div>
+</div>
+
+<style>
+    .skill-tag {
+        display: inline-block;
+        background-color: #1a1a1a;
+        color: #0099FF;
+        border: 1px solid #0077CC;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 0.8em;
+        font-family: 'Courier New', monospace;
+        margin: 0 4px 4px 0;
+        box-shadow: 0 0 3px rgba(0, 153, 255, 0.2);
+    }
+    
+    .tech-tag {
+        display: inline-block;
+        background-color: #1a1a1a;
+        color: #00CC99;
+        border: 1px solid #00AA77;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 0.8em;
+        font-family: 'Courier New', monospace;
+        margin: 0 4px 4px 0;
+        box-shadow: 0 0 3px rgba(0, 204, 153, 0.2);
+    }
+</style>

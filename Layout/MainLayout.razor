@@ -1,0 +1,50 @@
+﻿@inherits LayoutComponentBase
+
+<MudLayout>
+    <MudAppBar Elevation="0" Style="background-color: #000000; border-bottom: 1px solid #0099FF;">
+        <MudIconButton Icon="@(_drawerOpen ? Icons.Material.Filled.MenuOpen : Icons.Material.Filled.Menu)" Color="Color.Primary" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6" Style="color: #0099FF; font-family: 'Courier New', monospace;">
+            blake@archive:~$
+        </MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.body2" Style="color: #0077CC; font-family: 'Courier New', monospace;">
+            [ONLINE]
+        </MudText>
+    </MudAppBar>
+    
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="0" Variant="@DrawerVariant.Responsive" Width="280px" 
+               Style="background-color: #111111; border-right: 1px solid #0099FF;">
+        <MudDrawerHeader Style="background-color: #000000; border-bottom: 1px solid #0099FF; padding-top: 15px; padding-bottom: 17px;">
+            <MudText Typo="Typo.h6" Style="color: #0099FF; font-family: 'Courier New', monospace;">
+                /.../archive
+            </MudText>
+        </MudDrawerHeader>
+        <NavMenu />
+    </MudDrawer>
+    
+    <MudMainContent Style="background-color: #000000;">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="terminal-window" Style="margin-top: 80px;">
+            <div class="terminal-header">
+                <MudText Style="color: #0099FF; font-family: 'Courier New', monospace; margin: 0;">
+                    Terminal - blake@archive
+                </MudText>
+            </div>
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+
+    void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    void ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+}

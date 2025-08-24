@@ -1,0 +1,401 @@
+@page "/contact"
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Contact - Archive</PageTitle>
+
+<div style="color: #0099FF; font-family: 'Courier New', monospace;">
+    <div class="terminal-prompt" style="margin-bottom: 20px;">./construct-email.sh</div>
+    
+    <div style="margin-left: 20px; margin-bottom: 20px;">
+        <div style="margin-bottom: 10px; color: #0077CC;">
+            Composing new message...
+        </div>
+    </div>
+    
+    <div class="terminal-window" style="margin: 10px 0 30px 20px;">
+        <div class="terminal-header">
+            <span style="color: #0099FF; font-family: 'Courier New', monospace;">
+                📧 Email Composer - Terminal Mode
+            </span>
+        </div>
+        <div style="padding: 20px;">
+            @if (isSubmitting)
+            {
+                <div class="loading-container">
+                    <div style="color: #0099FF;">
+                        Sending message<span class="blinking-cursor"></span>
+                    </div>
+                    <div style="color: #0077CC; margin-top: 10px;">
+                        Please wait while your message is transmitted...
+                    </div>
+                </div>
+            }
+            else if (messageSent)
+            {
+                <div class="success-container">
+                    <div style="color: #00FF00; margin-bottom: 15px;">
+                        ✓ Message sent successfully!
+                    </div>
+                    <div style="color: #0099FF; margin-bottom: 10px;">
+                        $ echo "Thank you for reaching out!"
+                    </div>
+                    <div style="color: #0077CC; margin-bottom: 15px;">
+                        Your message has been delivered. I'll get back to you soon.
+                    </div>
+                    <MudButton Variant="Variant.Outlined" 
+                               Style="@GetButtonStyle()"
+                               @onclick="ResetForm">
+                        Send Another Message
+                    </MudButton>
+                </div>
+            }
+            else if (hasError)
+            {
+                <div class="error-container">
+                    <div style="color: #FF5722; margin-bottom: 15px;">
+                        ❌ Error: Message transmission failed
+                    </div>
+                    <div style="color: #0077CC; margin-bottom: 15px;">
+                        @errorMessage
+                    </div>
+                    <MudButton Variant="Variant.Outlined" 
+                               Style="@GetButtonStyle()"
+                               @onclick="ClearError">
+                        Try Again
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@contactForm" OnSubmit="@HandleSubmit">
+                    
+                    <div class="form-field">
+                        <div class="field-label">From:</div>
+                        <MudTextField @bind-Value="contactForm.FromEmail"
+                                      Placeholder="your.email@example.com"
+                                      Variant="Variant.Outlined"
+                                      Class="terminal-input"
+                                      Immediate="false"
+                                       />
+                        @if (showValidation && !string.IsNullOrEmpty(GetFieldError(nameof(contactForm.FromEmail))))
+                        {
+                            <div class="validation-error">@GetFieldError(nameof(contactForm.FromEmail))</div>
+                        }
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="field-label">Name:</div>
+                        <MudTextField @bind-Value="contactForm.FromName"
+                                      Placeholder="Your Name"
+                                      Variant="Variant.Outlined"
+                                      Class="terminal-input"
+                                      Immediate="false"
+                                       />
+                        @if (showValidation && !string.IsNullOrEmpty(GetFieldError(nameof(contactForm.FromName))))
+                        {
+                            <div class="validation-error">@GetFieldError(nameof(contactForm.FromName))</div>
+                        }
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="field-label">Subject:</div>
+                        <MudTextField @bind-Value="contactForm.Subject"
+                                      Placeholder="Brief subject line"
+                                      Variant="Variant.Outlined"
+                                      Class="terminal-input"
+                                      Immediate="false"
+                                       />
+                        @if (showValidation && !string.IsNullOrEmpty(GetFieldError(nameof(contactForm.Subject))))
+                        {
+                            <div class="validation-error">@GetFieldError(nameof(contactForm.Subject))</div>
+                        }
+                    </div>
+                    
+                    <div class="form-field">
+                        <div class="field-label">Message:</div>
+                        <MudTextField @bind-Value="contactForm.Message"
+                                      Placeholder="Your message here..."
+                                      Lines="6"
+                                      Variant="Variant.Outlined"
+                                      Class="terminal-input"
+                                      Immediate="false"
+                                       />
+                        @if (showValidation && !string.IsNullOrEmpty(GetFieldError(nameof(contactForm.Message))))
+                        {
+                            <div class="validation-error">@GetFieldError(nameof(contactForm.Message))</div>
+                        }
+                    </div>
+                    
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <MudButton ButtonType="ButtonType.Submit"
+                                   Variant="Variant.Filled"
+                                   Style="@GetSendButtonStyle()"
+                                   Disabled="@isSubmitting">
+                            Send Message
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Style="@GetButtonStyle()"
+                                   @onclick="ClearForm">
+                            Clear
+                        </MudButton>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+    
+    <div class="terminal-prompt" style="margin-bottom: 20px;">cat ~/.contact_info</div>
+    <div style="margin-left: 20px; margin-bottom: 20px; color: #0077CC;">
+        Alternative contact methods:<br/>
+        • GitHub: <a href="https://github.com/blake-ballew" style="color: #33AAFF;">github.com/blake-ballew</a><br/>
+        @* • LinkedIn: <a href="https://linkedin.com/in/blake-ballew" style="color: #33AAFF;">linkedin.com/in/blake-ballew</a><br/> *@
+        • Response time: Usually within 24 hours
+    </div>
+    
+    <div class="terminal-prompt blinking-cursor"></div>
+</div>
+
+@code {
+    private ContactForm contactForm = new();
+    private bool isSubmitting = false;
+    private bool messageSent = false;
+    private bool hasError = false;
+    private bool showValidation = false;
+    private string errorMessage = string.Empty;
+    private Dictionary<string, string> validationErrors = new();
+
+    // EmailJS Configuration - Replace these with your actual EmailJS values
+    private const string EmailJSUserId = "PrFh6AMScX83grFKh";
+    private const string EmailJSServiceId = "service_4ekh0c4"; 
+    private const string EmailJSTemplateId = "template_brxv6n7";
+
+    private async Task HandleSubmit()
+    {
+        showValidation = true;
+        validationErrors.Clear();
+
+        // Manual validation
+        if (string.IsNullOrWhiteSpace(contactForm.FromEmail))
+        {
+            validationErrors[nameof(contactForm.FromEmail)] = "Email is required";
+        }
+        else if (!IsValidEmail(contactForm.FromEmail))
+        {
+            validationErrors[nameof(contactForm.FromEmail)] = "Please enter a valid email address";
+        }
+
+        if (string.IsNullOrWhiteSpace(contactForm.FromName))
+        {
+            validationErrors[nameof(contactForm.FromName)] = "Name is required";
+        }
+        else if (contactForm.FromName.Length > 100)
+        {
+            validationErrors[nameof(contactForm.FromName)] = "Name must be less than 100 characters";
+        }
+
+        if (string.IsNullOrWhiteSpace(contactForm.Subject))
+        {
+            validationErrors[nameof(contactForm.Subject)] = "Subject is required";
+        }
+        else if (contactForm.Subject.Length > 200)
+        {
+            validationErrors[nameof(contactForm.Subject)] = "Subject must be less than 200 characters";
+        }
+
+        if (string.IsNullOrWhiteSpace(contactForm.Message))
+        {
+            validationErrors[nameof(contactForm.Message)] = "Message is required";
+        }
+        else if (contactForm.Message.Length < 10)
+        {
+            validationErrors[nameof(contactForm.Message)] = "Message must be at least 10 characters";
+        }
+        else if (contactForm.Message.Length > 2000)
+        {
+            validationErrors[nameof(contactForm.Message)] = "Message must be less than 2000 characters";
+        }
+
+        // If validation passes, send email
+        if (validationErrors.Count == 0)
+        {
+            await SendEmail();
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+
+    private string GetFieldError(string fieldName)
+    {
+        return validationErrors.ContainsKey(fieldName) ? validationErrors[fieldName] : string.Empty;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task SendEmail()
+    {
+        isSubmitting = true;
+        hasError = false;
+        StateHasChanged();
+
+        try
+        {
+            var templateParams = new
+            {
+                from_name = contactForm.FromName,
+                from_email = contactForm.FromEmail,
+                subject = contactForm.Subject,
+                message = contactForm.Message,
+                to_name = "Blake"
+            };
+
+            var result = await JSRuntime.InvokeAsync<string>("sendEmail", 
+                EmailJSServiceId, 
+                EmailJSTemplateId, 
+                templateParams, 
+                EmailJSUserId);
+
+            if (result == "success")
+            {
+                messageSent = true;
+                contactForm = new ContactForm(); // Reset form
+            }
+            else
+            {
+                hasError = true;
+                errorMessage = "Failed to send message. Please try again or use alternative contact methods.";
+            }
+        }
+        catch (Exception ex)
+        {
+            hasError = true;
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ResetForm()
+    {
+        messageSent = false;
+        hasError = false;
+        showValidation = false;
+        validationErrors.Clear();
+        contactForm = new ContactForm();
+        StateHasChanged();
+    }
+
+    private void ClearForm()
+    {
+        showValidation = false;
+        validationErrors.Clear();
+        contactForm = new ContactForm();
+        StateHasChanged();
+    }
+
+    private void ClearError()
+    {
+        hasError = false;
+        showValidation = false;
+        validationErrors.Clear();
+        errorMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private string GetButtonStyle()
+    {
+        return "background-color: transparent; color: #0099FF; border-color: #0099FF; font-family: 'Courier New', monospace; text-transform: none;";
+    }
+
+    private string GetSendButtonStyle()
+    {
+        return "background-color: #0099FF; color: #000000; border-color: #0099FF; font-family: 'Courier New', monospace; text-transform: none;";
+    }
+
+    public class ContactForm
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address")]
+        public string FromEmail { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Name is required")]
+        [StringLength(100, ErrorMessage = "Name must be less than 100 characters")]
+        public string FromName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Subject is required")]
+        [StringLength(200, ErrorMessage = "Subject must be less than 200 characters")]
+        public string Subject { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Message is required")]
+        [StringLength(2000, ErrorMessage = "Message must be less than 2000 characters")]
+        [MinLength(10, ErrorMessage = "Message must be at least 10 characters")]
+        public string Message { get; set; } = string.Empty;
+    }
+}
+
+<style>
+    .form-field {
+        margin-bottom: 15px;
+    }
+
+    .field-label {
+        color: #0099FF;
+        font-weight: bold;
+        margin-bottom: 5px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .field-value {
+        color: #33AAFF;
+        margin-bottom: 10px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .terminal-input {
+        font-family: 'Courier New', monospace !important;
+    }
+
+    .terminal-input .mud-input {
+        background-color: #111111 !important;
+        color: #0099FF !important;
+        border-color: #0077CC !important;
+        font-family: 'Courier New', monospace !important;
+    }
+
+    .terminal-input .mud-input:focus {
+        border-color: #0099FF !important;
+        box-shadow: 0 0 5px rgba(0, 153, 255, 0.3) !important;
+    }
+
+    .terminal-input .mud-input::placeholder {
+        color: #004499 !important;
+    }
+
+    .validation-error {
+        color: #FF5722;
+        font-size: 0.8em;
+        font-family: 'Courier New', monospace;
+        margin-top: 5px;
+    }
+
+    .loading-container, .success-container, .error-container {
+        text-align: center;
+        padding: 20px;
+    }
+</style>
