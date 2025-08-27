@@ -1,0 +1,388 @@
+@page "/projects"
+@using Markdig
+@using System.Text.Json
+@inject HttpClient Http
+
+<PageTitle>Projects - Archive</PageTitle>
+
+<div style="color: #0099FF; font-family: 'Courier New', monospace;">
+    <div class="terminal-prompt" style="margin-bottom: 20px;">find / -type f -name "*.md"</div>
+    
+    @if (allTags.Any())
+    {
+        <div style="margin-left: 20px; margin-bottom: 20px;">
+            <div style="margin-bottom: 10px; color: #0077CC;">Available tags:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <MudButton Variant="@(selectedTags.Count == 0 ? Variant.Filled : Variant.Outlined)"
+                           Size="Size.Small"
+                           Style="@GetTagButtonStyle(selectedTags.Count == 0)"
+                           @onclick="ClearFilters">
+                    all
+                </MudButton>
+                @foreach (var tag in allTags.OrderBy(t => t))
+                {
+                    <MudButton Variant="@(selectedTags.Contains(tag) ? Variant.Filled : Variant.Outlined)"
+                               Size="Size.Small"
+                               Style="@GetTagButtonStyle(selectedTags.Contains(tag))"
+                               @onclick="() => ToggleTag(tag)">
+                        @tag
+                    </MudButton>
+                }
+            </div>
+        </div>
+    }
+    
+    @if (filteredProjects.Any())
+    {
+        <div style="margin-left: 20px; margin-bottom: 30px;">
+            @foreach (var project in filteredProjects)
+            {
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <MudButton Variant="Variant.Text" 
+                                   Style="color: #0099FF; font-family: 'Courier New', monospace; text-transform: none; padding: 4px 8px; margin-right: 12px;"
+                                   @onclick="() => ToggleProject(project.Id)">
+                            @if (expandedProjects.Contains(project.Id))
+                            {
+                                <span>▼ @project.Title</span>
+                            }
+                            else
+                            {
+                                <span>▶ @project.Title</span>
+                            }
+                        </MudButton>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            @foreach (var tag in project.Tags)
+                            {
+                                <span class="project-tag">@tag</span>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(project.Description))
+                    {
+                        <div style="margin-left: 20px; color: #0077CC; font-size: 0.9em; margin-bottom: 8px;">
+                            @project.Description
+                        </div>
+                    }
+                </div>
+                
+                @if (expandedProjects.Contains(project.Id))
+                {
+                    <div class="terminal-window" style="margin: 10px 0 20px 20px;">
+                        <div class="terminal-header">
+                            <MudText Style="color: #0099FF; font-family: 'Courier New', monospace; margin: 0;">
+                                cat projects/@project.FileName
+                            </MudText>
+                        </div>
+                        <div style="padding: 20px;">
+                            @if (project.IsLoaded)
+                            {
+                                @((MarkupString)project.HtmlContent)
+                            }
+                            else
+                            {
+                                <div style="color: #0077CC;">Loading project details<span class="blinking-cursor"></span></div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <div style="margin-left: 20px; margin-bottom: 30px;">
+            @if (projects.Any())
+            {
+                <div style="color: #0077CC;">No projects match the selected tags.</div>
+            }
+            else
+            {
+                <div style="color: #0077CC;">Scanning project directory<span class="blinking-cursor"></span></div>
+            }
+        </div>
+    }
+    
+    <div class="terminal-prompt" style="margin-bottom: 20px;">git status</div>
+    <div style="margin-left: 20px; margin-bottom: 20px; color: #0077CC;">
+        Projects loaded: @projects.Count<br/>
+        Filtered results: @filteredProjects.Count<br/>
+        Active filters: @(selectedTags.Count > 0 ? string.Join(", ", selectedTags) : "none")<br/>
+        Ready for deployment...
+    </div>
+    
+    <div class="terminal-prompt blinking-cursor"></div>
+</div>
+
+@code {
+    private List<ProjectInfo> projects = new();
+    private List<ProjectInfo> filteredProjects = new();
+    private HashSet<string> expandedProjects = new();
+    private HashSet<string> selectedTags = new();
+    private HashSet<string> allTags = new();
+    private readonly MarkdownPipeline pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjects();
+    }
+
+    private async Task LoadProjects()
+    {
+        try
+        {
+            var jsonContent = await Http.GetStringAsync("projects/projects.json");
+            var projectsData = JsonSerializer.Deserialize<ProjectsData>(jsonContent, new JsonSerializerOptions 
+            { 
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+            });
+            
+            if (projectsData?.Projects != null)
+            {
+                foreach (var projectData in projectsData.Projects)
+                {
+                    var project = new ProjectInfo
+                    {
+                        Id = projectData.Id,
+                        FileName = projectData.Filename,
+                        Title = projectData.Title,
+                        Tags = projectData.Tags.Select(t => t.ToLower()).ToList(),
+                        Description = projectData.Description,
+                        Status = projectData.Status,
+                        Repository = projectData.Repository,
+                        IsLoaded = false,
+                        HtmlContent = string.Empty
+                    };
+                    
+                    projects.Add(project);
+                    
+                    // Add tags to the global tag collection
+                    foreach (var tag in project.Tags)
+                    {
+                        allTags.Add(tag);
+                    }
+                }
+            }
+            
+            UpdateFilteredProjects();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading projects: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleProject(string projectId)
+    {
+        if (expandedProjects.Contains(projectId))
+        {
+            expandedProjects.Remove(projectId);
+        }
+        else
+        {
+            expandedProjects.Add(projectId);
+            
+            // Load project content if not already loaded
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project != null && !project.IsLoaded)
+            {
+                await LoadProjectContent(project);
+            }
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task LoadProjectContent(ProjectInfo project)
+    {
+        try
+        {
+            var markdownContent = await Http.GetStringAsync($"projects/{project.FileName}");
+            project.HtmlContent = Markdown.ToHtml(markdownContent, pipeline);
+            project.IsLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading project {project.FileName}: {ex.Message}");
+            project.HtmlContent = $"<p style='color: #FF5722;'>Error loading project: {ex.Message}</p>";
+            project.IsLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateFilteredProjects()
+    {
+        if (selectedTags.Count == 0)
+        {
+            filteredProjects = projects.ToList();
+        }
+        else
+        {
+            filteredProjects = projects.Where(p => 
+                selectedTags.All(tag => p.Tags.Contains(tag))
+            ).ToList();
+        }
+    }
+
+    private void ToggleTag(string tag)
+    {
+        if (selectedTags.Contains(tag))
+        {
+            selectedTags.Remove(tag);
+        }
+        else
+        {
+            selectedTags.Add(tag);
+        }
+        
+        UpdateFilteredProjects();
+        StateHasChanged();
+    }
+
+    private void ClearFilters()
+    {
+        selectedTags.Clear();
+        UpdateFilteredProjects();
+        StateHasChanged();
+    }
+
+    private string GetTagButtonStyle(bool isSelected)
+    {
+        if (isSelected)
+        {
+            return "background-color: #0099FF; color: #000000; border-color: #0099FF; font-family: 'Courier New', monospace; text-transform: none;";
+        }
+        else
+        {
+            return "background-color: transparent; color: #0099FF; border-color: #0099FF; font-family: 'Courier New', monospace; text-transform: none;";
+        }
+    }
+
+    private class ProjectsData
+    {
+        public List<ProjectData> Projects { get; set; } = new();
+    }
+
+    private class ProjectData
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Filename { get; set; } = string.Empty;
+        public List<string> Tags { get; set; } = new();
+        public string Status { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? Repository { get; set; }
+    }
+
+    private class ProjectInfo
+    {
+        public string Id { get; set; } = string.Empty;
+        public string FileName { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string? Repository { get; set; }
+        public string HtmlContent { get; set; } = string.Empty;
+        public bool IsLoaded { get; set; }
+        public List<string> Tags { get; set; } = new();
+    }
+}
+
+<style>
+    /* Project tag styling */
+    .project-tag {
+        display: inline-block;
+        background-color: #1a1a1a;
+        color: #0099FF;
+        border: 1px solid #0077CC;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 0.75em;
+        font-family: 'Courier New', monospace;
+        margin: 0 2px;
+        box-shadow: 0 0 3px rgba(0, 153, 255, 0.2);
+    }
+
+
+    /* Override terminal header text margin */
+    .terminal-header .mud-typography {
+        margin: 0 !important;
+    }
+
+    /* Markdown styling for terminal theme */
+    .terminal-window h1 {
+        color: #0099FF !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 1.5rem !important;
+        margin: 0 0 15px 0 !important;
+        border-bottom: 1px solid #0099FF;
+        padding-bottom: 5px;
+    }
+    
+    .terminal-window h2 {
+        color: #33AAFF !important;
+        font-family: 'Courier New', monospace !important;
+        font-size: 1.2rem !important;
+        margin: 20px 0 10px 0 !important;
+    }
+    
+    .terminal-window p {
+        color: #0099FF !important;
+        font-family: 'Courier New', monospace !important;
+        line-height: 1.5 !important;
+        margin: 10px 0 !important;
+    }
+    
+    .terminal-window strong {
+        color: #33AAFF !important;
+        font-weight: bold !important;
+    }
+    
+    .terminal-window code {
+        background-color: #1a1a1a !important;
+        color: #0099FF !important;
+        padding: 2px 4px !important;
+        border: 1px solid #0077CC !important;
+        border-radius: 3px !important;
+        font-family: 'Courier New', monospace !important;
+    }
+    
+    .terminal-window pre {
+        background-color: #1a1a1a !important;
+        border: 1px solid #0099FF !important;
+        border-radius: 5px !important;
+        padding: 15px !important;
+        overflow-x: auto !important;
+        margin: 15px 0 !important;
+    }
+    
+    .terminal-window pre code {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        color: #0099FF !important;
+    }
+    
+    .terminal-window ul, .terminal-window ol {
+        color: #0099FF !important;
+        font-family: 'Courier New', monospace !important;
+        margin: 10px 0 10px 20px !important;
+    }
+    
+    .terminal-window li {
+        margin: 5px 0 !important;
+    }
+    
+    .terminal-window a {
+        color: #33AAFF !important;
+        text-decoration: underline !important;
+    }
+    
+    .terminal-window a:hover {
+        color: #0099FF !important;
+    }
+</style>
