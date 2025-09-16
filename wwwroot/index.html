@@ -16,6 +16,16 @@
     <link href="TechyPortfolio.styles.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script>
+        // Handle GitHub Pages SPA routing
+        (function() {
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect !== location.href) {
+                history.replaceState(null, null, redirect);
+            }
+        })();
+    </script>
 </head>
 
 <body>
